@@ -1,21 +1,17 @@
 import Foundation
 
 public final class LogBook {
-    public let persistance: LogPersistance
-    public init(persistance: LogPersistance) {
-        self.persistance = persistance
-    }
-
-    public init(logs: [Log]) {
-        self.persistance = ReaderPersistance(logs: logs)
+    public let persistence: LogPersistence
+    public init(persistence: LogPersistence = .inMemory()) {
+        self.persistence = persistence
     }
 
     public func logs() async -> [Log] {
-        await persistance.read()
+        await persistence.read()
     }
 
     public func makeLogger(_ category: String, in module: String) -> Logger {
-        Logger(writer: persistance, category: category, module: module)
+        Logger(writer: persistence, category: category, module: module)
     }
 
     public func withExportedLogFile() async throws -> URL {
@@ -37,67 +33,5 @@ public final class LogBook {
         try await task.value
 
         return url
-    }
-}
-
-public protocol LogWriter {
-    func write(_ log: Log)
-}
-
-public protocol LogReader {
-    func read() async -> [Log]
-}
-
-public typealias LogPersistance = LogReader & LogWriter
-
-public final class InMemoryPersistance: LogPersistance {
-    private var logs: [Log] = []
-    private let limit: Int
-    private let purgeCount: Int
-    public init(limit: Int = 5000, purgeCount: Int = 1000) {
-        self.limit = limit
-        self.purgeCount = purgeCount
-    }
-
-    public func write(_ log: Log) {
-        logs.append(log)
-        if logs.count > limit {
-            logs = Array(logs.dropFirst(purgeCount))
-        }
-    }
-
-    public func read() async -> [Log] {
-        logs
-    }
-}
-
-final class ReaderPersistance: LogPersistance {
-    let logs: [Log]
-    init(logs: [Log]) {
-        self.logs = logs
-    }
-
-    func read() async -> [Log] {
-        logs
-    }
-
-    func write(_ log: Log) { }
-}
-
-public protocol LogDisplayer {
-    associatedtype Output
-    func display(log: Log) -> Output
-}
-
-public struct TextLogDisplayer: LogDisplayer {
-    public func display(log: Log) -> String {
-        "[\(log.module).\(log.category)][\(level(log.level))] \(log.message)"
-    }
-
-    private func level(_ level: Log.Level) -> String {
-        switch level {
-        case .error: return "ERROR"
-        case .info: return "INFO"
-        }
     }
 }

@@ -2,11 +2,11 @@ import SwiftUI
 import LogBook
 
 public struct LogBookEnvironmentKey: EnvironmentKey {
-    public static var defaultValue: LogBook = LogBook(persistance: InMemoryPersistance())
+    public static let defaultValue = LogBook(persistence: .inMemory())
 }
 
 public struct LoggerEnvironmentKey: EnvironmentKey {
-    public static var defaultValue: Logger = LogBook(persistance: InMemoryPersistance()).makeLogger("Default", in: "Default")
+    public static var defaultValue: Logger = LogBookEnvironmentKey.defaultValue.makeLogger("Default", in: "Default")
 }
 
 public extension EnvironmentValues {
