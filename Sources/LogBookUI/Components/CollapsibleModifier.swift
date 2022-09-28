@@ -9,7 +9,9 @@ struct CollapsibleModifier: ViewModifier {
     func body(content: Content) -> some View {
         VStack(spacing: 0) {
             Button(title) {
-                isCollapsed.toggle()
+                withAnimation(.easeOut(duration: 0.2)) {
+                    isCollapsed.toggle()
+                }
             }
             .buttonStyle(CollapsibleButtonStyle(isCollapsed: isCollapsed))
 
@@ -41,7 +43,12 @@ struct CollapsibleButtonStyle: ButtonStyle {
         .padding(.vertical, 10)
         .contentShape(Rectangle())
         .foregroundColor(.accentColor)
-        .animation(.default, value: isCollapsed)
+#if os(iOS)
+        .background(Color(UIColor.systemBackground))
+#elseif os(macOS)
+        .background(Color(NSColor.windowBackgroundColor))
+#endif
+        .animation(.easeOut(duration: 0.2), value: isCollapsed)
         .opacity(configuration.isPressed ? 0.5 : 1)
     }
 }
