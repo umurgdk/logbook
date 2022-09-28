@@ -52,10 +52,18 @@ public typealias LogPersistance = LogReader & LogWriter
 
 public final class InMemoryPersistance: LogPersistance {
     private var logs: [Log] = []
-    public init() { }
+    private let limit: Int
+    private let purgeCount: Int
+    public init(limit: Int = 5000, purgeCount: Int = 1000) {
+        self.limit = limit
+        self.purgeCount = purgeCount
+    }
 
     public func write(_ log: Log) {
         logs.append(log)
+        if logs.count > limit {
+            logs = Array(logs.dropFirst(purgeCount))
+        }
     }
 
     public func read() async -> [Log] {
